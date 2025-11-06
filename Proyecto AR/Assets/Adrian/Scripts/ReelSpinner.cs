@@ -37,10 +37,35 @@ public class ReelSpinner : MonoBehaviour
     float SlotAngle => 360f / Mathf.Max(1, items); // grados que ocupa una casilla
     Coroutine current;
 
+    //Cosas de audio
+    public AudioSource loopSourceShared;   // Asignar en UN carrete (o en varios; el primero que llegue se registra)
+    public AudioClip clipSpinLoop;         // Clip de “giro” (debe ser loopeable; el AudioSource hará loop=true)
+
+    // Un AudioSource LOCAL para el one-shot de parada (puede ser el mismo en todos los carretes)
+    public AudioSource sfxSourceStopLocal; 
+    public AudioClip clipReelStop;         // Clip “CilindroParar”
+
+    // Estado global para el loop compartido
+    static int __globalSpinningCount = 0;
+    static AudioSource __globalLoopSource = null;
+    static AudioClip __globalLoopClip = null;
+
+    // Estado local para no desbalancear el contador si se interrumpe una corrutina
+    bool _audioCounted = false;
+
+    public float extraStopDelay = 0f; // segundos a esperar antes de encajar y sonar la parada
+
+    [Header("Escalonado natural")]
+    public float extraSpinTime = 0f;   // Segundos extra añadidos a spinDuration
+    public float durationScale = 1f;   // Multiplicador de duración (1 = sin cambios)
+
     // Llama a esto para que gire hacia ese índice final
     public void SpinToIndex(int index)
     {
         index = Mod(index, items);
+        
+        
+
         if (current != null) StopCoroutine(current);
         current = StartCoroutine(SpinToIndexCo(index));
     }
@@ -51,6 +76,21 @@ public class ReelSpinner : MonoBehaviour
         float target = IndexToAngle(index);
         SetLocalAngleDeg(Normalize360(target));
     }
+
+    
+    void Awake()
+    {
+        // Registrar (lazy) una única fuente global de loop
+        if (__globalLoopSource == null && loopSourceShared != null)
+        {
+            __globalLoopSource = loopSourceShared;
+            __globalLoopSource.loop = true;
+            __globalLoopSource.playOnAwake = false;
+        }
+        if (__globalLoopClip == null && clipSpinLoop != null)
+            __globalLoopClip = clipSpinLoop;
+    }
+
 
     // Devuelve el índice aproximado actual en el que está el cilindro
     public int GetApproxIndex()
@@ -67,15 +107,26 @@ public class ReelSpinner : MonoBehaviour
 
     IEnumerator SpinToIndexCo(int index)
     {
+        // --- AUDIO: al pasar de 0→1 carretes activos, arranca el loop compartido ---
+        if (__globalSpinningCount == 0 && __globalLoopSource != null && __globalLoopClip != null)
+        {
+            __globalLoopSource.clip = __globalLoopClip;
+            __globalLoopSource.Play();
+        }
+        __globalSpinningCount++;
+        _audioCounted = true; // marcamos que este carrete ha incrementado el contador
+
+        // --- Cálculo de giro ---
         float start = GetLocalAngleDeg();
         float target = IndexToAngle(index);
 
-        // calcula cuántos grados debe avanzar para llegar al target hacia adelante
+        // Avance total = vueltas estéticas + arco mínimo positivo hasta el target
         float totalDelta = spinsBeforeStop * 360f + ShortestPositiveArc(start, target);
         float end = start + totalDelta;
 
         float t = 0f;
-        float dur = Mathf.Max(0.05f, spinDuration);
+        float dur = Mathf.Max(0.05f, (spinDuration * durationScale) + extraSpinTime);
+
 
         while (t < 1f)
         {
@@ -83,13 +134,29 @@ public class ReelSpinner : MonoBehaviour
             float k = ease.Evaluate(Mathf.Clamp01(t));
             float ang = Mathf.LerpUnclamped(start, end, k);
             SetLocalAngleDeg(ang);
-            yield return null;
+            yield
+            return null;
         }
 
-        // Asegura que acaba exactamente en la casilla (sin error flotante)
+        if (extraStopDelay > 0f)
+            yield return new WaitForSeconds(extraStopDelay);
+
+        // Snap final exacto a la casilla
         SetLocalAngleDeg(Normalize360(target));
         current = null;
+
+        // --- AUDIO: dispara el one-shot de parada ---
+        if (sfxSourceStopLocal != null && clipReelStop != null)
+            sfxSourceStopLocal.PlayOneShot(clipReelStop);
+
+        // --- AUDIO: decrementa y, si ya no queda ningún carrete girando, para el loop ---
+        __globalSpinningCount = Mathf.Max(0, __globalSpinningCount - 1);
+        if (__globalSpinningCount == 0 && __globalLoopSource != null && __globalLoopSource.isPlaying)
+            __globalLoopSource.Stop();
+
+        _audioCounted = false; // este carrete ya no cuenta como “girando”
     }
+
 
     // Convierte índice → ángulo final exacto
     float IndexToAngle(int index)
