@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig>
+  <Tracking>
+    <ImageTarget name="target_tragaperras" size="0.500000 0.750000" />
+    <ImageTarget name="letrerojuego" size="0.500000 0.500000" />
+    <ImageTarget name="logonegro" size="0.500000 0.500000" />
+    <ImageTarget name="logoblanco" size="0.500000 0.500000" />
+  </Tracking>
+</QCARConfig>
