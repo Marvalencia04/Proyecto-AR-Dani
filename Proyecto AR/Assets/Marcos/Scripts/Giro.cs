@@ -7,7 +7,7 @@ public class Giro : MonoBehaviour
     public ReelSpinner r1; // Cylinder.001
     public ReelSpinner r2; // Cylinder.002
     public ReelSpinner r3; // Cylinder.003
-
+    public CurrencyController currencyController; // Asignar en el Inspector
     [Header("Timing")]
     public float delayBetweenReels = 0.15f;
 
@@ -34,10 +34,14 @@ public class Giro : MonoBehaviour
     public SlotPrizeManager prizeManager; // arrástralo desde el inspector
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (currencyController == null || currencyController.IntentarRestarCosto())
         {
             int[] generated = GenerateWeightedArray();
             PlayRequested(generated);
+        }
+        else
+        {
+            Debug.Log("No hay monedas suficientes para girar.");
         }
         //Depuración: forzar resultados específicos
         if (Input.GetKeyDown(KeyCode.Alpha1)) // Fuerza triple 0 (7)

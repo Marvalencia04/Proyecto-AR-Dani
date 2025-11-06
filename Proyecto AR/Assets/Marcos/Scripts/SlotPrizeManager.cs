@@ -22,7 +22,7 @@ public class SlotPrizeManager : MonoBehaviour
     public float stopEffectsAfter = 5f;
 
     private Coroutine activeCoroutine;
-
+    public CurrencyController currencyController; // Asignar desde el Inspector
     private void Start()
     {
         if (slotMachine == null)
