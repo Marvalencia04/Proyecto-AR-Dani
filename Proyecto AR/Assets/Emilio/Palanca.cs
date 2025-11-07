@@ -6,7 +6,7 @@ public class Palanca : MonoBehaviour
 {
     public GameObject vbBtnObj;
     public Animator cubeAni;
-    public Giro2 giro;
+    public Giro giro;
 
     public float tiempoReactivacion = 4f;
 
@@ -24,8 +24,8 @@ public class Palanca : MonoBehaviour
 
         cubeAni.Play("Cube|Scene");
 
-        int[] generated = giro.GenerateWeightedArray();
-        giro.PlayRequested(generated);
+
+        giro.IntentarGiro();
 
         Debug.Log("BTN Presionado");
 
