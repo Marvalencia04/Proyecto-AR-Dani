@@ -31,6 +31,8 @@ public class SlotPrizeManager : MonoBehaviour
 
     private Coroutine activeCoroutine;
 
+    public AudioSource audioGanar;
+
     private void Start()
     {
         if (slotMachine == null)
@@ -42,24 +44,34 @@ public class SlotPrizeManager : MonoBehaviour
     // ==========================================================
     // 🏆 Evaluación del resultado
     // ==========================================================
+
     public void EvaluarResultado(int[] resultado)
+    {
+        StartCoroutine(EvaluarResultadoConRetraso(resultado));
+    }
+
+    private IEnumerator EvaluarResultadoConRetraso(int[] resultado)
     {
         if (resultado == null || resultado.Length != 3)
         {
             Debug.LogError("❌ Resultado inválido recibido por SlotPrizeManager.");
-            return;
+            yield break;
         }
 
         int a = resultado[0];
         int b = resultado[1];
         int c = resultado[2];
 
+        // ⏳ Esperar 4 segundos antes de evaluar el resultado
+        Debug.Log("⏳ Esperando 4 segundos antes de evaluar el resultado...");
+        yield return new WaitForSeconds(4f);
+
         // 🔹 CASO 1: Triple 7
         if (a == 0 && b == 0 && c == 0)
         {
             Debug.Log($"🎉 ¡Triple 7! Premio: {premioTriple7}");
             OnWin(premioTriple7, "¡Triple 7!", true);
-            return;
+            yield break;
         }
 
         // 🔹 CASO 2: Tres iguales
@@ -67,7 +79,7 @@ public class SlotPrizeManager : MonoBehaviour
         {
             Debug.Log($"🎉 Tres iguales ({a}) → Premio: {premioTresIguales}");
             OnWin(premioTresIguales, "Tres iguales", false);
-            return;
+            yield break;
         }
 
         // 🔹 CASO 3: Sin premio
@@ -75,13 +87,16 @@ public class SlotPrizeManager : MonoBehaviour
         OnLose();
     }
 
+
     // ==========================================================
     // 🔔 Reacciones a victoria o derrota
     // ==========================================================
 
-    protected virtual void OnWin(int cantidad, string tipo, bool isTriple7)
+    protected virtual async void OnWin(int cantidad, string tipo, bool isTriple7)
     {
         Debug.Log($"🏅 Ganaste {cantidad} monedas por: {tipo}");
+
+       
 
         // 💰 Añadir monedas al jugador
         if (currencyManager != null)
@@ -98,6 +113,7 @@ public class SlotPrizeManager : MonoBehaviour
         // 🎊 Confeti (para cualquier victoria)
         if (confettiFX && isTriple7 != null)
         {
+            
             var em = confettiFX.emission;
             em.enabled = true;
             confettiFX.Play(true);
@@ -107,7 +123,15 @@ public class SlotPrizeManager : MonoBehaviour
             coinsFX.Play(true);
             Debug.Log("💰 Monedas activadas.");
 
-
+            if (audioGanar != null)
+            {
+                audioGanar.Play();
+                Debug.Log("🔊 Sonido de ganar reproducido.");
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ No se asignó el AudioSource 'audioGanar' en el inspector.");
+            }
 
         }
 

@@ -1,0 +1,5 @@
+C:/xampp/htdocs/Proyecto AR-Dani/Proyecto AR/.utmp/RelWithDebInfo/j4q2y5t2/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/xampp/htdocs/Proyecto AR-Dani/Proyecto AR/.utmp/RelWithDebInfo/j4q2y5t2/arm64-v8a/CMakeFiles/rebuild_cache.dir
+C:/xampp/htdocs/Proyecto AR-Dani/Proyecto AR/.utmp/RelWithDebInfo/j4q2y5t2/arm64-v8a/GameActivity/CMakeFiles/game.dir
+C:/xampp/htdocs/Proyecto AR-Dani/Proyecto AR/.utmp/RelWithDebInfo/j4q2y5t2/arm64-v8a/GameActivity/CMakeFiles/edit_cache.dir
+C:/xampp/htdocs/Proyecto AR-Dani/Proyecto AR/.utmp/RelWithDebInfo/j4q2y5t2/arm64-v8a/GameActivity/CMakeFiles/rebuild_cache.dir
