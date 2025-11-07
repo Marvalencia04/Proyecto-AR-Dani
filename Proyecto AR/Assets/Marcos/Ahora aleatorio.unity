@@ -389,7 +389,7 @@ MonoBehaviour:
   mensajeSinPremio: Sigue intentando...
   soundManager: {fileID: 0}
   confettiFX: {fileID: 934467857}
-  coinsFX: {fileID: 4170491744455653053, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
+  coinsFX: {fileID: 2126189024}
   stopEffectsAfter: 6
 --- !u!1 &290308080
 GameObject:
@@ -2024,7 +2024,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4170491744455653053, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
       propertyPath: looping
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4170491744455653053, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
+      propertyPath: prewarm
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4170491744455653053, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
       propertyPath: lengthInSec
@@ -2044,15 +2048,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4170491744455653053, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
       propertyPath: InitialModule.startSpeed.scalar
-      value: 10
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4170491744455653053, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
       propertyPath: InitialModule.startLifetime.scalar
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 4170491744455653053, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
+      propertyPath: InitialModule.startSpeed.minScalar
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4170491744455653053, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
       propertyPath: InitialModule.gravityModifier.scalar
-      value: 1.6
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 5103417196545537104, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
       propertyPath: m_Name
@@ -2080,11 +2088,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7231087871371006495, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -3.7558358
+      value: -3.699
       objectReference: {fileID: 0}
     - target: {fileID: 7231087871371006495, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 9.925675
+      value: 9.905
       objectReference: {fileID: 0}
     - target: {fileID: 7231087871371006495, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2948,6 +2956,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1979647910}
   m_CullTransparentMesh: 1
+--- !u!198 &2126189024 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 4170491744455653053, guid: d73beb0ac545f8844a22f59957c563db, type: 3}
+  m_PrefabInstance: {fileID: 1353599747}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2133647353
 GameObject:
   m_ObjectHideFlags: 0
