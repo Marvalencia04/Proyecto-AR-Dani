@@ -96,22 +96,29 @@ public class SlotPrizeManager : MonoBehaviour
             StopCoroutine(activeCoroutine);
 
         // 🎊 Confeti (para cualquier victoria)
-        if (confettiFX != null)
+        if (confettiFX && isTriple7 != null)
         {
             var em = confettiFX.emission;
             em.enabled = true;
             confettiFX.Play(true);
             Debug.Log("🎉 Confeti activado.");
-        }
-
-        // 💰 Monedas (solo para triple 7)
-        if (isTriple7 && coinsFX != null)
-        {
-            var em = coinsFX.emission;
-            em.enabled = true;
+            var emC = coinsFX.emission;
+            emC.enabled = true;
             coinsFX.Play(true);
             Debug.Log("💰 Monedas activadas.");
+
+
+
         }
+
+        // 💰 Monedas (solo para triple 7)'''
+        //if (isTriple7 && coinsFX != null)
+        //{
+        //    var em = coinsFX.emission;
+        //    em.enabled = true;
+         //   coinsFX.Play(true);
+         //   Debug.Log("💰 Monedas activadas.");
+       // }
 
         if (stopEffectsAfter > 0)
             activeCoroutine = StartCoroutine(FadeOutEffects());

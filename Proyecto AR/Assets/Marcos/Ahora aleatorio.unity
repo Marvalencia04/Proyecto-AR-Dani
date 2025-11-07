@@ -385,7 +385,7 @@ MonoBehaviour:
   slotMachine: {fileID: 1871182286}
   currencyManager: {fileID: 46718510}
   premioTresIguales: 15
-  premioTriple7: 50
+  premioTriple7: 30
   mensajeSinPremio: Sigue intentando...
   soundManager: {fileID: 0}
   confettiFX: {fileID: 934467857}
