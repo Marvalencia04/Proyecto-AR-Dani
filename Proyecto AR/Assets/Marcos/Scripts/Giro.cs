@@ -3,11 +3,16 @@ using UnityEngine;
 
 public class Giro : MonoBehaviour
 {
-    // Asigna tus 3 cilindros con ReelSpinner
+    [Header("Reels")]
     public ReelSpinner r1; // Cylinder.001
     public ReelSpinner r2; // Cylinder.002
     public ReelSpinner r3; // Cylinder.003
-    public CurrencyController currencyController; // Asignar en el Inspector
+
+    [Header("Referencias externas")]
+    public SlotCurrencyManager currencyManager;  // 💰 Sustituye a CurrencyController
+    public SlotPrizeManager prizeManager;        // 🎁 Evaluador de premios
+
+
     [Header("Timing")]
     public float delayBetweenReels = 0.15f;
 
@@ -23,46 +28,63 @@ public class Giro : MonoBehaviour
     public int shiftR2 = 0;
     public int shiftR3 = 0;
 
-    [Header("Configuración de símbolos y probabilidades")]
-    [Tooltip("Cantidad total de símbolos posibles (0..N-1). Ej: 4 = {0,1,2,3}")]
-    public int totalSymbols = 4;
-
+    [Header("Probabilidades de símbolos")]
     [Tooltip("Pesos de aparición para cada símbolo (la suma puede ser cualquier número)")]
     public int[] symbolWeights = new int[4] { 1, 3, 3, 1 };
     // Ejemplo: [7, Campana, Cereza, BAR] => 7 raro, campana y cereza comunes, BAR raro.
-    
-    public SlotPrizeManager prizeManager; // arrástralo desde el inspector
-    void Update()
+
+    // ============================================================
+    // 🎮 Control principal
+    // ============================================================
+
+    private void Update()
     {
-        if (currencyController == null || currencyController.IntentarRestarCosto())
-        {
-            int[] generated = GenerateWeightedArray();
-            PlayRequested(generated);
-        }
-        else
-        {
-            Debug.Log("No hay monedas suficientes para girar.");
-        }
-        //Depuración: forzar resultados específicos
-        if (Input.GetKeyDown(KeyCode.Alpha1)) // Fuerza triple 0 (7)
-            ForceResult(0);
-        if (Input.GetKeyDown(KeyCode.Alpha2)) // Fuerza triple 1 (Campana)
-            ForceResult(1);
-        if (Input.GetKeyDown(KeyCode.Alpha3)) // Fuerza triple 2 (Cereza)
-            ForceResult(2);
-        if (Input.GetKeyDown(KeyCode.Alpha4)) // Fuerza triple 3 (BAR)
-            ForceResult(3);
+        // Inicia una jugada con SPACE o clic de prueba
+        if (Input.GetKeyDown(KeyCode.Space))
+            IntentarGiro();
+
+        // Depuración: forzar triples con teclas
+        if (Input.GetKeyDown(KeyCode.Alpha1)) ForceResult(0); // Triple 7
+        if (Input.GetKeyDown(KeyCode.Alpha2)) ForceResult(1); // Triple Campana
+        if (Input.GetKeyDown(KeyCode.Alpha3)) ForceResult(2); // Triple Cereza
+        if (Input.GetKeyDown(KeyCode.Alpha4)) ForceResult(3); // Triple BAR
     }
-    // -----------------------------------------------------------
-    // 🔹 Método auxiliar que fuerza un triple símbolo específico
-    // -----------------------------------------------------------
+
+    // ============================================================
+    // 💰 Control de monedas y ejecución del giro
+    // ============================================================
+
+    public void IntentarGiro()
+    {
+        if (currencyManager == null)
+        {
+            Debug.LogWarning("⚠️ No hay SlotCurrencyManager asignado.");
+            return;
+        }
+
+        // Resta monedas antes de girar
+        if (!currencyManager.RestarCostoJugada())
+        {
+            Debug.Log("❌ No hay suficientes monedas para jugar.");
+            return;
+        }
+
+        // Si hay monedas → genera resultado y gira
+        int[] generated = GenerateWeightedArray();
+        PlayRequested(generated);
+    }
+
+    // ============================================================
+    // 🎯 Métodos de resultado
+    // ============================================================
+
     void ForceResult(int symbol)
     {
         int[] forced = new int[3] { symbol, symbol, symbol };
         Debug.Log($"🎯 Forzando resultado: [{symbol},{symbol},{symbol}]");
         PlayRequested(forced);
     }
-    // Genera un array aleatorio de 3 símbolos según los pesos
+
     public int[] GenerateWeightedArray()
     {
         int[] arr = new int[3];
@@ -73,22 +95,24 @@ public class Giro : MonoBehaviour
         return arr;
     }
 
-    // Retorna un índice aleatorio basado en los pesos de probabilidad
     int WeightedRandom(int[] weights)
     {
         int total = 0;
-        foreach (var w in weights) total += Mathf.Max(0, w); // evita negativos
-        if (total == 0) return 0; // fallback
+        foreach (var w in weights) total += Mathf.Max(0, w);
+        if (total == 0) return 0;
 
         int r = Random.Range(0, total);
         for (int i = 0; i < weights.Length; i++)
         {
-            if (r < weights[i])
-                return i;
+            if (r < weights[i]) return i;
             r -= weights[i];
         }
         return 0;
     }
+
+    // ============================================================
+    // 🎞️ Control de animaciones y sincronización
+    // ============================================================
 
     public void PlayRequested(int[] requestSymbols)
     {
@@ -97,6 +121,7 @@ public class Giro : MonoBehaviour
             Debug.LogError("PlayRequested necesita un array de 3 símbolos [0..3].");
             return;
         }
+
         StartCoroutine(SpinAllSequential(requestSymbols));
     }
 
@@ -116,15 +141,20 @@ public class Giro : MonoBehaviour
         int idx3 = FindNextIndexForSymbol(r3, req[2], shiftR3);
         r3.SpinToIndex(idx3);
 
-        // Esperar hasta que los 3 rodillos terminen
+        // Esperar hasta que los 3 terminen
         float timeout = Mathf.Max(r1.spinDuration, r2.spinDuration, r3.spinDuration) + 2f;
         float elapsed = 0f;
 
+      /* while ((r1.IsSpinning || r2.IsSpinning || r3.IsSpinning) && elapsed < timeout)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }*/
 
         if (elapsed >= timeout)
             Debug.LogWarning("Timeout esperando rodillos.");
 
-        // ✅ Ahora los rodillos terminaron
+        // Evaluar resultado
         if (prizeManager != null)
         {
             Debug.Log("Evaluando resultado final: [" + string.Join(", ", req) + "]");
@@ -135,7 +165,6 @@ public class Giro : MonoBehaviour
             Debug.LogWarning("No hay PrizeManager asignado, no se evalúa el resultado.");
         }
     }
-
 
     int FindNextIndexForSymbol(ReelSpinner reel, int symbol, int shift)
     {

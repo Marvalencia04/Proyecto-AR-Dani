@@ -1,13 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// Evalúa combinaciones ganadoras en la tragaperras,
+/// activa efectos, sonidos y actualiza el saldo del jugador.
+/// </summary>
 public class SlotPrizeManager : MonoBehaviour
 {
     [Header("Referencia al controlador principal")]
     public Giro slotMachine;
 
+    [Header("Sistema de monedas")]
+    public SlotCurrencyManager currencyManager; // 💰 Nuevo sistema
+
     [Header("Premios configurables")]
     public int premioTresIguales = 100;
+
     public int premioTriple7 = 500;
     public string mensajeSinPremio = "Sigue intentando...";
 
@@ -22,18 +30,23 @@ public class SlotPrizeManager : MonoBehaviour
     public float stopEffectsAfter = 5f;
 
     private Coroutine activeCoroutine;
-    public CurrencyController currencyController; // Asignar desde el Inspector
+
     private void Start()
     {
         if (slotMachine == null)
-            Debug.LogWarning("SlotPrizeManager: no hay referencia al objeto Giro.");
+            Debug.LogWarning("⚠️ SlotPrizeManager: no hay referencia a Giro.");
+        if (currencyManager == null)
+            Debug.LogWarning("⚠️ SlotPrizeManager: no hay referencia a SlotCurrencyManager.");
     }
 
+    // ==========================================================
+    // 🏆 Evaluación del resultado
+    // ==========================================================
     public void EvaluarResultado(int[] resultado)
     {
         if (resultado == null || resultado.Length != 3)
         {
-            Debug.LogError("Resultado inválido recibido por SlotPrizeManager.");
+            Debug.LogError("❌ Resultado inválido recibido por SlotPrizeManager.");
             return;
         }
 
@@ -41,6 +54,7 @@ public class SlotPrizeManager : MonoBehaviour
         int b = resultado[1];
         int c = resultado[2];
 
+        // 🔹 CASO 1: Triple 7
         if (a == 0 && b == 0 && c == 0)
         {
             Debug.Log($"🎉 ¡Triple 7! Premio: {premioTriple7}");
@@ -48,6 +62,7 @@ public class SlotPrizeManager : MonoBehaviour
             return;
         }
 
+        // 🔹 CASO 2: Tres iguales
         if (a == b && b == c)
         {
             Debug.Log($"🎉 Tres iguales ({a}) → Premio: {premioTresIguales}");
@@ -55,34 +70,47 @@ public class SlotPrizeManager : MonoBehaviour
             return;
         }
 
+        // 🔹 CASO 3: Sin premio
         Debug.Log(mensajeSinPremio);
         OnLose();
     }
 
+    // ==========================================================
+    // 🔔 Reacciones a victoria o derrota
+    // ==========================================================
+
     protected virtual void OnWin(int cantidad, string tipo, bool isTriple7)
     {
+        Debug.Log($"🏅 Ganaste {cantidad} monedas por: {tipo}");
+
+        // 💰 Añadir monedas al jugador
+        if (currencyManager != null)
+            currencyManager.AñadirPremio(cantidad);
+
+        // 🔊 Sonido de victoria
         if (soundManager != null)
             soundManager.OnWin();
 
-        // Detener cualquier fade-out anterior si existía
+        // 🔄 Cancelar efectos anteriores si los hubiera
         if (activeCoroutine != null)
             StopCoroutine(activeCoroutine);
 
-        // ✅ Aseguramos que las emisiones estén habilitadas antes de reproducir
+        // 🎊 Confeti (para cualquier victoria)
         if (confettiFX != null)
         {
             var em = confettiFX.emission;
             em.enabled = true;
             confettiFX.Play(true);
-            Debug.Log("Playing confetti effect for win.");
+            Debug.Log("🎉 Confeti activado.");
         }
 
+        // 💰 Monedas (solo para triple 7)
         if (isTriple7 && coinsFX != null)
         {
             var em = coinsFX.emission;
             em.enabled = true;
             coinsFX.Play(true);
-            Debug.Log("Playing coins effect for triple 7 win.");
+            Debug.Log("💰 Monedas activadas.");
         }
 
         if (stopEffectsAfter > 0)
@@ -95,34 +123,32 @@ public class SlotPrizeManager : MonoBehaviour
             soundManager.OnLose();
     }
 
+    // ==========================================================
+    // 🌈 Fade out de efectos
+    // ==========================================================
     private IEnumerator FadeOutEffects()
     {
         yield return new WaitForSeconds(stopEffectsAfter);
 
-        // 🔹 Parar la emisión suavemente, dejar que las partículas mueran
         if (confettiFX != null)
         {
             var em = confettiFX.emission;
             em.enabled = false;
-            Debug.Log("Stopping confetti emission.");
+            Debug.Log("⏹ Deteniendo confeti.");
         }
 
         if (coinsFX != null)
         {
             var em = coinsFX.emission;
             em.enabled = false;
-            Debug.Log("Stopping coins emission.");
+            Debug.Log("⏹ Deteniendo monedas.");
         }
 
-        // 🔹 Espera a que las partículas que están en pantalla desaparezcan naturalmente
+        // Esperar un poco a que las partículas se disipen
         yield return new WaitForSeconds(2f);
 
-        // 🔹 Limpiar partículas viejas
-        if (confettiFX != null)
-            confettiFX.Clear();
-
-        if (coinsFX != null)
-            coinsFX.Clear();
+        if (confettiFX != null) confettiFX.Clear();
+        if (coinsFX != null) coinsFX.Clear();
 
         activeCoroutine = null;
     }
